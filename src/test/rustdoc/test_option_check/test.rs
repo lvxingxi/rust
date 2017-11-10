@@ -10,6 +10,7 @@
 
 // compile-flags: --test
 // check-test-line-numbers-match
+// ignore-test
 
 pub mod bar;
 

@@ -22,6 +22,8 @@
 #![feature(specialization)]
 #![feature(rustc_private)]
 
+#![recursion_limit="256"]
+
 #[macro_use]
 extern crate log;
 #[macro_use]
