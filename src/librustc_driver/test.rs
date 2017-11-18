@@ -42,7 +42,6 @@ use errors::{Level, DiagnosticBuilder};
 use syntax::feature_gate::UnstableFeatures;
 use syntax::symbol::Symbol;
 use syntax_pos::DUMMY_SP;
-use arena::DroplessArena;
 
 use rustc::hir;
 

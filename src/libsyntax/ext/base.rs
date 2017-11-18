@@ -507,7 +507,7 @@ pub enum MacroKind {
     Derive,
 }
 
-// FIXME: Make multithreaded
+#[cfg(not(threaded))]
 /// An enum representing the different kinds of syntax extensions.
 pub enum SyntaxExtension {
     /// A syntax extension that is attached to an item and creates new items
@@ -563,6 +563,63 @@ pub enum SyntaxExtension {
     ///
     /// The second element is the definition site span.
     DeclMacro(Box<TTMacroExpander>, Option<(ast::NodeId, Span)>),
+}
+
+#[cfg(threaded)]
+pub enum SyntaxExtension {
+    /// A syntax extension that is attached to an item and creates new items
+    /// based upon it.
+    ///
+    /// `#[derive(...)]` is a `MultiItemDecorator`.
+    ///
+    /// Prefer ProcMacro or MultiModifier since they are more flexible.
+    MultiDecorator(Box<MultiItemDecorator + Sync + Send>),
+
+    /// A syntax extension that is attached to an item and modifies it
+    /// in-place. Also allows decoration, i.e., creating new items.
+    MultiModifier(Box<MultiItemModifier + Sync + Send>),
+
+    /// A function-like procedural macro. TokenStream -> TokenStream.
+    ProcMacro(Box<ProcMacro + Sync + Send>),
+
+    /// An attribute-like procedural macro. TokenStream, TokenStream -> TokenStream.
+    /// The first TokenSteam is the attribute, the second is the annotated item.
+    /// Allows modification of the input items and adding new items, similar to
+    /// MultiModifier, but uses TokenStreams, rather than AST nodes.
+    AttrProcMacro(Box<AttrProcMacro + Sync + Send>),
+
+    /// A normal, function-like syntax extension.
+    ///
+    /// `bytes!` is a `NormalTT`.
+    NormalTT {
+        expander: Box<TTMacroExpander + Sync + Send>,
+        def_info: Option<(ast::NodeId, Span)>,
+        /// Whether the contents of the macro can
+        /// directly use `#[unstable]` things (true == yes).
+        allow_internal_unstable: bool,
+        /// Whether the contents of the macro can use `unsafe`
+        /// without triggering the `unsafe_code` lint.
+        allow_internal_unsafe: bool,
+    },
+
+    /// A function-like syntax extension that has an extra ident before
+    /// the block.
+    ///
+    IdentTT(Box<IdentMacroExpander + Sync + Send>, Option<Span>, bool),
+
+    /// An attribute-like procedural macro. TokenStream -> TokenStream.
+    /// The input is the annotated item.
+    /// Allows generating code to implement a Trait for a given struct
+    /// or enum item.
+    ProcMacroDerive(Box<MultiItemModifier + Sync + Send>, Vec<Symbol> /* inert attribute names */),
+
+    /// An attribute-like procedural macro that derives a builtin trait.
+    BuiltinDerive(BuiltinDeriveFn),
+
+    /// A declarative macro, e.g. `macro m() {}`.
+    ///
+    /// The second element is the definition site span.
+    DeclMacro(Box<TTMacroExpander + Sync + Send>, Option<(ast::NodeId, Span)>),
 }
 
 impl SyntaxExtension {

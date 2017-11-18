@@ -31,7 +31,6 @@ use rustc::mir::Mir;
 use std::collections::BTreeMap;
 use std::io;
 use std::mem;
-use std::rc::Rc;
 use std::u32;
 
 use rustc_serialize::{Decodable, Decoder, SpecializedDecoder, opaque};
@@ -743,12 +742,12 @@ impl<'a, 'tcx> CrateMetadata {
                                                    .map(|body| (body.id(), body))
                                                    .collect();
             ExternBodyNestedBodies {
-                nested_bodies: Rc::new(nested_bodies),
+                nested_bodies: Lrc::new(nested_bodies),
                 fingerprint: ast.stable_bodies_hash,
             }
         } else {
             ExternBodyNestedBodies {
-                nested_bodies: Rc::new(BTreeMap::new()),
+                nested_bodies: Lrc::new(BTreeMap::new()),
                 fingerprint: Fingerprint::zero(),
             }
         }

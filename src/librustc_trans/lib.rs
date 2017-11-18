@@ -46,7 +46,7 @@ extern crate owning_ref;
 extern crate rustc_allocator;
 extern crate rustc_apfloat;
 extern crate rustc_back;
-extern crate rustc_data_structures;
+#[macro_use] extern crate rustc_data_structures;
 extern crate rustc_incremental;
 extern crate rustc_llvm as llvm;
 extern crate rustc_platform_intrinsics as intrinsics;
@@ -77,7 +77,7 @@ use rustc_data_structures::sync::Lrc;
 
 use rustc::dep_graph::DepGraph;
 use rustc::hir::def_id::CrateNum;
-use rustc::middle::cstore::MetadataLoader;
+use rustc::middle::cstore::MetadataLoaderDyn;
 use rustc::middle::cstore::{NativeLibrary, CrateSource, LibSource};
 use rustc::session::Session;
 use rustc::session::config::{OutputFilenames, OutputType};
@@ -162,7 +162,7 @@ impl rustc_trans_utils::trans_crate::TransCrate for LlvmTransCrate {
     type OngoingCrateTranslation = back::write::OngoingCrateTranslation;
     type TranslatedCrate = CrateTranslation;
 
-    fn metadata_loader() -> Box<MetadataLoader> {
+    fn metadata_loader() -> Box<MetadataLoaderDyn> {
         box metadata::LlvmMetadataLoader
     }
 

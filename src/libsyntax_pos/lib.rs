@@ -25,6 +25,7 @@
 #![feature(optin_builtin_traits)]
 #![allow(unused_attributes)]
 #![feature(specialization)]
+#![feature(macro_vis_matcher)]
 
 use std::borrow::Cow;
 use std::cell::Cell;

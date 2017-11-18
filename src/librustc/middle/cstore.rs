@@ -37,7 +37,7 @@ use util::nodemap::NodeSet;
 use std::any::Any;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
-use owning_ref::ErasedBoxRef;
+use owning_ref::{Erased, OwningRef};
 use syntax::ast;
 use syntax::ext::base::SyntaxExtension;
 use syntax::symbol::Symbol;
@@ -46,6 +46,11 @@ use rustc_back::target::Target;
 use rustc_data_structures::sync::Lrc;
 
 pub use self::NativeLibraryKind::*;
+
+#[cfg(threaded)]
+pub type MetadataRef = OwningRef<Box<Erased + Send + Sync>, [u8]>;
+#[cfg(not(threaded))]
+pub type MetadataRef = OwningRef<Box<Erased>, [u8]>;
 
 // lonely orphan structs and enums looking for a better home
 
@@ -201,6 +206,11 @@ impl EncodedMetadataHashes {
     }
 }
 
+#[cfg(threaded)]
+pub type MetadataLoaderDyn = MetadataLoader + Sync;
+#[cfg(not(threaded))]
+pub type MetadataLoaderDyn = MetadataLoader;
+
 /// The backend's way to give the crate store access to the metadata in a library.
 /// Note that it returns the raw metadata bytes stored in the library file, whether
 /// it is compressed, uncompressed, some weird mix, etc.
@@ -213,11 +223,11 @@ pub trait MetadataLoader {
     fn get_rlib_metadata(&self,
                          target: &Target,
                          filename: &Path)
-                         -> Result<ErasedBoxRef<[u8]>, String>;
+                         -> Result<MetadataRef, String>;
     fn get_dylib_metadata(&self,
                           target: &Target,
                           filename: &Path)
-                          -> Result<ErasedBoxRef<[u8]>, String>;
+                          -> Result<MetadataRef, String>;
 }
 
 #[derive(Clone)]

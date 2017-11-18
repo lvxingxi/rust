@@ -23,6 +23,7 @@
 #![feature(unicode)]
 #![feature(rustc_diagnostic_macros)]
 #![feature(i128_type)]
+#![feature(const_atomic_usize_new)]
 
 #![recursion_limit="256"]
 

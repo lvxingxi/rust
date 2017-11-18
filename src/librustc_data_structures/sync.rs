@@ -50,7 +50,15 @@ cfg_if! {
             }
         }
 
+        #[macro_export]
+        macro_rules! rustc_erase_owner {
+            ($v:expr) => {
+                $v.erase_owner()
+            }
+        }
+
         pub fn assert_sync<T: ?Sized>() {}
+        pub fn assert_send_sync_val<T: ?Sized>(_t: &T) {}
 
         pub use std::rc::Rc as Lrc;
         pub use std::cell::Ref as ReadGuard;
@@ -150,6 +158,7 @@ cfg_if! {
         pub use std::marker::Sync as Sync;
 
         pub fn assert_sync<T: ?Sized + Sync>() {}
+        pub fn assert_send_sync_val<T: ?Sized + Sync + Send>(_t: &T) {}
 
         pub use parking_lot::RwLockReadGuard as ReadGuard;
         pub use parking_lot::RwLockWriteGuard as WriteGuard;
@@ -174,7 +183,7 @@ cfg_if! {
 
             // process multiple declarations
             ($(#[$attr:meta])* static $name:ident: $t:ty = $init:expr; $($rest:tt)*) => (
-                lazy_static!($(#[$attr])* $vis static ref $name: $t = $init;);
+                lazy_static!($(#[$attr])* static ref $name: $t = $init;);
                 rustc_global!($($rest)*);
             );
 
@@ -194,6 +203,14 @@ cfg_if! {
                     //$callback(&*$name)
                     with(&*$name, $callback)
                 }
+            }
+        }
+
+        #[macro_export]
+        macro_rules! rustc_erase_owner {
+            ($v:expr) => {
+                ::rustc_data_structures::sync::assert_send_sync_val(&v);
+                $v.erase_send_sync_owner()
             }
         }
 

@@ -16,14 +16,14 @@ use schema;
 use rustc::hir::def_id::{CRATE_DEF_INDEX, CrateNum, DefIndex};
 use rustc::hir::map::definitions::DefPathTable;
 use rustc::hir::svh::Svh;
-use rustc::middle::cstore::{DepKind, ExternCrate, MetadataLoader};
+use rustc::middle::cstore::{DepKind, ExternCrate, MetadataLoaderDyn};
 use rustc::session::{Session, CrateDisambiguator};
 use rustc_back::PanicStrategy;
 use rustc_data_structures::indexed_vec::IndexVec;
 use rustc::util::nodemap::{FxHashMap, FxHashSet, NodeMap};
 
 use rustc_data_structures::sync::{Lrc, RwLock, Lock, LockCell};
-use owning_ref::ErasedBoxRef;
+use owning_ref::{OwningRef, Erased};
 use syntax::{ast, attr};
 use syntax::ext::base::SyntaxExtension;
 use syntax::symbol::Symbol;
@@ -41,7 +41,12 @@ pub use cstore_impl::{provide, provide_extern};
 // own crate numbers.
 pub type CrateNumMap = IndexVec<CrateNum, CrateNum>;
 
-pub struct MetadataBlob(pub ErasedBoxRef<[u8]>);
+#[cfg(threaded)]
+pub type MetadataRef = OwningRef<Box<Erased + Send + Sync>, [u8]>;
+#[cfg(not(threaded))]
+pub type MetadataRef = OwningRef<Box<Erased>, [u8]>;
+
+pub struct MetadataBlob(pub MetadataRef);
 
 /// Holds information about a syntax_pos::FileMap imported from another crate.
 /// See `imported_filemaps()` for more information.
@@ -93,11 +98,11 @@ pub struct CStore {
     metas: RwLock<FxHashMap<CrateNum, Lrc<CrateMetadata>>>,
     /// Map from NodeId's of local extern crate statements to crate numbers
     extern_mod_crate_map: Lock<NodeMap<CrateNum>>,
-    pub metadata_loader: Box<MetadataLoader>,
+    pub metadata_loader: Box<MetadataLoaderDyn>,
 }
 
 impl CStore {
-    pub fn new(metadata_loader: Box<MetadataLoader>) -> CStore {
+    pub fn new(metadata_loader: Box<MetadataLoaderDyn>) -> CStore {
         CStore {
             metas: RwLock::new(FxHashMap()),
             extern_mod_crate_map: Lock::new(FxHashMap()),

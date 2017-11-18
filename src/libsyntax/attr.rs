@@ -32,7 +32,6 @@ use tokenstream::{TokenStream, TokenTree, Delimited};
 use util::ThinVec;
 use rustc_data_structures::sync::Lock;
 
-use std::cell::Cell;
 use std::iter;
 
 rustc_global! {
@@ -424,6 +423,8 @@ pub fn mk_spanned_word_item(sp: Span, name: Name) -> MetaItem {
 
 #[cfg(not(threaded))]
 pub fn mk_attr_id() -> AttrId {
+    use std::cell::Cell;
+
     thread_local! { static NEXT_ATTR_ID: Cell<usize> = Cell::new(0) }
 
     let id = NEXT_ATTR_ID.with(|slot| {
@@ -439,7 +440,7 @@ pub fn mk_attr_id() -> AttrId {
     use std::sync::atomic::AtomicUsize;
     use std::sync::atomic::Ordering;
 
-    static NEXT_ATTR_ID: AtomicUsize = AtomicUsize::new();
+    static NEXT_ATTR_ID: AtomicUsize = AtomicUsize::new(0);
 
     AttrId(NEXT_ATTR_ID.fetch_add(1, Ordering::SeqCst))
 }

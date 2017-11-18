@@ -34,6 +34,7 @@
 #![feature(optin_builtin_traits)]
 #![feature(underscore_lifetimes)]
 #![feature(macro_vis_matcher)]
+#![feature(macro_reexport)]
 #![feature(allow_internal_unstable)]
 
 #![cfg_attr(unix, feature(libc))]
@@ -48,6 +49,8 @@ extern crate libc;
 extern crate parking_lot;
 #[macro_use]
 extern crate cfg_if;
+#[macro_reexport(lazy_static, __lazy_static_internal, __lazy_static_create)]
+extern crate lazy_static;
 
 pub use rustc_serialize::hex::ToHex;
 

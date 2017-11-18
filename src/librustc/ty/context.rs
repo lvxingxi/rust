@@ -24,7 +24,7 @@ use hir::map::DefPathHash;
 use lint::{self, Lint};
 use ich::{StableHashingContext, NodeIdHashingMode};
 use middle::const_val::ConstVal;
-use middle::cstore::{CrateStore, LinkMeta, EncodedMetadataHashes};
+use middle::cstore::{CrateStoreDyn, LinkMeta, EncodedMetadataHashes};
 use middle::cstore::EncodedMetadata;
 use middle::free_region::FreeRegionMap;
 use middle::lang_items;
@@ -862,7 +862,7 @@ pub struct GlobalCtxt<'tcx> {
     global_arenas: &'tcx GlobalArenas<'tcx>,
     global_interners: CtxtInterners<'tcx>,
 
-    cstore: &'tcx CrateStore,
+    cstore: &'tcx CrateStoreDyn,
 
     pub sess: &'tcx Session,
 
@@ -953,7 +953,7 @@ fn _assert_gcx_sync<'tcx>() {
 
     assert_sync::<&'tcx GlobalArenas<'tcx>>();
     assert_sync::<CtxtInterners<'tcx>>();
-    //assert_sync::<&'tcx CrateStoreDyn>();
+    assert_sync::<&'tcx CrateStoreDyn>();
     assert_sync::<&'tcx Session>();
     assert_sync::<DepGraph>();
     assert_sync::<maps::OnDiskCache<'tcx>>();
@@ -1111,7 +1111,7 @@ impl<'a, 'gcx, 'tcx> TyCtxt<'a, 'gcx, 'tcx> {
     /// value (types, substs, etc.) can only be used while `ty::tls` has a valid
     /// reference to the context, to allow formatting values that need it.
     pub fn create_and_enter<F, R>(s: &'tcx Session,
-                                  cstore: &'tcx CrateStore,
+                                  cstore: &'tcx CrateStoreDyn,
                                   local_providers: ty::maps::Providers<'tcx>,
                                   extern_providers: ty::maps::Providers<'tcx>,
                                   arenas: &'tcx AllArenas<'tcx>,
